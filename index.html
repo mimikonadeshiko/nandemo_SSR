@@ -1,2 +1,167 @@
-<h1>なんでもSSR
-</h1>
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>画像に光るテキスト</title>
+  <!-- Google Fonts: Noto Sans JP -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #000;
+      font-family: 'Noto Sans JP', sans-serif;
+    }
+
+    .container {
+      position: relative;
+      display: inline-block;
+    }
+
+    #background-image-behind {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      max-width: 100%;
+      height: auto;
+      z-index: 0;
+    }
+
+    #background-image {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    .glow-title,
+    .glow-subtitle {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #fff;
+      text-align: center;
+      font-family: 'Noto Sans JP', sans-serif;
+      z-index: 2;
+    }
+
+    .glow-title {
+      top: 74%;
+      font-size: 4.2em;
+      font-weight: 700;
+      letter-spacing: 2.5px;
+      text-shadow: 0 0 4px #fff, 0 0 8px #fff;
+
+    }
+
+    .glow-subtitle {
+      top: 70.5%;
+      font-size: 1.8em;
+      font-weight: 400;
+      text-shadow: 0 0 2px #fff, 0 0 4px #fff;
+
+    }
+
+    #save-button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 1em;
+      cursor: pointer;
+      background-color: #fff;
+      border: none;
+      border-radius: 5px;
+      font-family: 'Noto Sans JP', sans-serif;
+      z-index: 3;
+      position: relative;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <img src="/Users/takeru/Desktop/SSR/matsushima.JPG" id="background-image-behind" alt="背景画像後ろ">
+    <img src="/Users/takeru/Desktop/SSR/SSR_base.png" id="background-image" alt="背景画像">
+    <h1 class=" glow-title">SSR</h1>
+    <h3 class="glow-subtitle">待望のHTML版</h3>
+  </div>
+  <button id="save-button">画像として保存</button>
+  <canvas id="canvas" style="display:none;"></canvas>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const saveButton = document.getElementById('save-button');
+
+      if (saveButton) {
+        saveButton.addEventListener('click', function () {
+          const canvas = document.getElementById('canvas');
+          const context = canvas.getContext('2d');
+          const imageBehind = document.getElementById('background-image-behind');
+          const image = document.getElementById('background-image');
+
+          // キャンバスのサイズを後ろの画像のサイズに設定
+          canvas.width = imageBehind.naturalWidth;
+          canvas.height = imageBehind.naturalHeight;
+
+          // 後ろの画像をキャンバスに描画
+          context.drawImage(imageBehind, 0, 0, canvas.width, canvas.height);
+
+          // 前景の画像をキャンバスに描画（透過PNG）
+          context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+          // 光るテキストを描画する関数
+          function drawTextWithGlow(textElement, offsetY) {
+            const text = textElement.textContent;
+            const computedStyle = window.getComputedStyle(textElement);
+            context.font = `${computedStyle.fontWeight} ${computedStyle.fontSize} ${computedStyle.fontFamily}`;
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+            context.fillStyle = computedStyle.color;
+
+            // テキストシャドウのプロパティを取得
+            const textShadow = computedStyle.textShadow;
+            if (textShadow) {
+              const shadowMatches = textShadow.match(/rgba?\((\d+), (\d+), (\d+),? (\d+\.?\d*)?\) (\d+)px (\d+)px (\d+)px/g);
+              if (shadowMatches) {
+                shadowMatches.forEach(shadow => {
+                  const parts = shadow.match(/rgba?\((\d+), (\d+), (\d+),? (\d+\.?\d*)?\) (\d+)px (\d+)px (\d+)px/);
+                  const [r, g, b, a, x, y, blur] = parts.slice(1).map(Number);
+                  context.shadowColor = `rgba(${r},${g},${b},${a || 1})`;
+                  context.shadowOffsetX = x;
+                  context.shadowOffsetY = y;
+                  context.shadowBlur = blur;
+                });
+              }
+            }
+
+            // キャンバスにテキストを描画
+            const x = canvas.width / 2;
+            const y = offsetY;
+            context.fillText(text, x, y);
+          }
+
+          // タイトルとサブタイトルを描画
+          const titleElement = document.querySelector('.glow-title');
+          const subtitleElement = document.querySelector('.glow-subtitle');
+
+          drawTextWithGlow(titleElement, canvas.height * 0.775);
+          drawTextWithGlow(subtitleElement, canvas.height * 0.72);
+
+          // リンク要素を作成してダウンロードをトリガー
+          const link = document.createElement('a');
+          link.href = canvas.toDataURL('image/png');
+          link.download = 'SSR.png';
+          link.click();
+        });
+      }
+    });
+  </script>
+</body>
+
+</html>
