@@ -87,14 +87,21 @@
 
 <body>
   <div class="container">
-    <img src="" id="background-image-behind">
+    <!--<img src="AAAA.JPG" id="background-image-behind" alt="背景画像後ろ">-->
+    <div id="imagePreview" id="background-image-behind"></div>
     <img src="https://github.com/mimikonadeshiko/nandemo_SSR/blob/4282555012dfc765c352c53361caa48fa4afaa49/SSR_base.png" id="background-image">
     <h1 class=" glow-title">SSR</h1>
     <h3 class="glow-subtitle">待望のHTML版</h3>
   </div>
   <button id="save-button">画像として保存</button>
+  <input type="file" id="fileInput" accept="image/*">
+
   <canvas id="canvas" style="display:none;"></canvas>
+
+
+
   <script>
+
     document.addEventListener('DOMContentLoaded', function () {
       const saveButton = document.getElementById('save-button');
 
@@ -102,7 +109,7 @@
         saveButton.addEventListener('click', function () {
           const canvas = document.getElementById('canvas');
           const context = canvas.getContext('2d');
-          const imageBehind = document.getElementById('background-image-behind');
+          const imageBehind = document.getElementById();
           const image = document.getElementById('background-image');
 
           // キャンバスのサイズを後ろの画像のサイズに設定
@@ -163,5 +170,7 @@
     });
   </script>
 </body>
+
+}
 
 </html>
