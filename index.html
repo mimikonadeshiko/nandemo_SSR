@@ -128,122 +128,125 @@
   <button id="save-button">画像として保存</button>
 
   <script>
+    const fileInput = document.getElementById('fileInput');
+    const imagePreview = document.getElementById('imagePreview');
+    const foregroundImage = document.getElementById('background-image');
+
+    const subtitleInput = document.getElementById('subtitle-input');
+    const titleInput = document.getElementById('title-input');
+
+    const subtitleElement = document.querySelector('.glow-subtitle');
+    const titleElement = document.querySelector('.glow-title');
+
+    subtitleInput.addEventListener('input', function () {
+      subtitleElement.textContent = this.value;
+    });
+
+    titleInput.addEventListener('input', function () {
+      titleElement.textContent = this.value;
+    });
+
+    fileInput.addEventListener('change', function () {
+      const file = this.files[0];
+
+      if (file) {
+        const reader = new FileReader();
+
+        reader.addEventListener('load', function () {
+          const imgElement = document.createElement('img');
+          imgElement.src = reader.result;
+          imgElement.onload = function () {
+            const fgWidth = foregroundImage.naturalWidth;
+            const fgHeight = foregroundImage.naturalHeight;
+
+            const aspectRatio = imgElement.naturalWidth / imgElement.naturalHeight;
+            let newWidth = fgWidth;
+            let newHeight = fgHeight;
+
+            if (aspectRatio > 1) {
+              newWidth = fgWidth;
+              newHeight = fgWidth / aspectRatio;
+            } else {
+              newHeight = fgHeight;
+              newWidth = fgHeight * aspectRatio;
+            }
+
+            imgElement.style.width = `${newWidth}px`;
+            imgElement.style.height = `${newHeight}px`;
+            imgElement.style.position = 'absolute';
+            imgElement.style.top = '0';
+            imgElement.style.left = '50%';
+            imgElement.style.transform = 'translateX(-50%)';
+
+            imagePreview.innerHTML = '';
+            imagePreview.appendChild(imgElement);
+          };
+        });
+
+        reader.readAsDataURL(file);
+      }
+    });
+  </script>
+
+  <script>
     document.addEventListener('DOMContentLoaded', function () {
-      const fileInput = document.getElementById('fileInput');
-      const imagePreview = document.getElementById('imagePreview');
-      const foregroundImage = document.getElementById('background-image');
-
-      const subtitleInput = document.getElementById('subtitle-input');
-      const titleInput = document.getElementById('title-input');
-
-      const subtitleElement = document.querySelector('.glow-subtitle');
-      const titleElement = document.querySelector('.glow-title');
-
-      subtitleInput.addEventListener('input', function () {
-        subtitleElement.textContent = this.value;
-      });
-
-      titleInput.addEventListener('input', function () {
-        titleElement.textContent = this.value;
-      });
-
-      fileInput.addEventListener('change', function () {
-        const file = this.files[0];
-
-        if (file) {
-          const reader = new FileReader();
-
-          reader.addEventListener('load', function () {
-            const imgElement = document.createElement('img');
-            imgElement.src = reader.result;
-            imgElement.onload = function () {
-              const fgWidth = foregroundImage.naturalWidth;
-              const fgHeight = foregroundImage.naturalHeight;
-
-              const aspectRatio = imgElement.naturalWidth / imgElement.naturalHeight;
-              let newWidth = fgWidth;
-              let newHeight = fgHeight;
-
-              if (aspectRatio > 1) {
-                newWidth = fgWidth;
-                newHeight = fgWidth / aspectRatio;
-              } else {
-                newHeight = fgHeight;
-                newWidth = fgHeight * aspectRatio;
-              }
-
-              imgElement.style.width = `${newWidth}px`;
-              imgElement.style.height = `${newHeight}px`;
-              imgElement.style.position = 'absolute';
-              imgElement.style.top = '0';
-              imgElement.style.left = '50%';
-              imgElement.style.transform = 'translateX(-50%)';
-
-              imagePreview.innerHTML = '';
-              imagePreview.appendChild(imgElement);
-            };
-          });
-
-          reader.readAsDataURL(file);
-        }
-      });
-
       const saveButton = document.getElementById('save-button');
 
-      saveButton.addEventListener('click', function () {
-        const canvas = document.getElementById('canvas');
-        const context = canvas.getContext('2d');
-        const imageBehind = imagePreview.querySelector('img');
-        const background = foregroundImage;
+      if (saveButton) {
+        saveButton.addEventListener('click', function () {
+          const canvas = document.getElementById('canvas');
+          const context = canvas.getContext('2d');
+          const imageBehind = document.querySelector('#imagePreview img');
+          const image = document.getElementById('background-image');
 
-        canvas.width = background.naturalWidth;
-        canvas.height = background.naturalHeight;
+          if (!imageBehind) return;
 
-        // Draw background image
-        context.drawImage(background, 0, 0, canvas.width, canvas.height);
+          canvas.width = imageBehind.naturalWidth;
+          canvas.height = imageBehind.naturalHeight;
 
-        // Draw overlaid image (if any)
-        if (imageBehind) {
           context.drawImage(imageBehind, 0, 0, canvas.width, canvas.height);
-        }
+          context.drawImage(image, 0, 0, canvas.width, canvas.height);
 
-        function drawTextWithGlow(textElement, offsetY) {
-          const text = textElement.textContent;
-          const computedStyle = window.getComputedStyle(textElement);
-          context.font = `${computedStyle.fontWeight} ${computedStyle.fontSize} ${computedStyle.fontFamily}`;
-          context.textAlign = 'center';
-          context.textBaseline = 'middle';
-          context.fillStyle = computedStyle.color;
+          function drawTextWithGlow(textElement, offsetY) {
+            const text = textElement.textContent;
+            const computedStyle = window.getComputedStyle(textElement);
+            context.font = `${computedStyle.fontWeight} ${computedStyle.fontSize} ${computedStyle.fontFamily}`;
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+            context.fillStyle = computedStyle.color;
 
-          const textShadow = computedStyle.textShadow;
-          if (textShadow) {
-            const shadowMatches = textShadow.match(/rgba?\((\d+), (\d+), (\d+),? (\d+\.?\d*)?\) (\d+)px (\d+)px (\d+)px/g);
-            if (shadowMatches) {
-              shadowMatches.forEach(shadow => {
-                const parts = shadow.match(/rgba?\((\d+), (\d+), (\d+),? (\d+\.?\d*)?\) (\d+)px (\d+)px (\d+)px/);
-                const [r, g, b, a, x, y, blur] = parts.slice(1).map(Number);
-                context.shadowColor = `rgba(${r},${g},${b},${a || 1})`;
-                context.shadowOffsetX = x;
-                context.shadowOffsetY = y;
-                context.shadowBlur = blur;
-              });
+            const textShadow = computedStyle.textShadow;
+            if (textShadow) {
+              const shadowMatches = textShadow.match(/rgba?\((\d+), (\d+), (\d+),? (\d+\.?\d*)?\) (\d+)px (\d+)px (\d+)px/g);
+              if (shadowMatches) {
+                shadowMatches.forEach(shadow => {
+                  const parts = shadow.match(/rgba?\((\d+), (\d+), (\d+),? (\d+\.?\d*)?\) (\d+)px (\d+)px (\d+)px/);
+                  const [r, g, b, a, x, y, blur] = parts.slice(1).map(Number);
+                  context.shadowColor = `rgba(${r},${g},${b},${a || 1})`;
+                  context.shadowOffsetX = x;
+                  context.shadowOffsetY = y;
+                  context.shadowBlur = blur;
+                });
+              }
             }
+
+            const x = canvas.width / 2;
+            const y = offsetY;
+            context.fillText(text, x, y);
           }
 
-          const x = canvas.width / 2;
-          const y = offsetY;
-          context.fillText(text, x, y);
-        }
+          const titleElement = document.querySelector('.glow-title');
+          const subtitleElement = document.querySelector('.glow-subtitle');
 
-        drawTextWithGlow(titleElement, canvas.height * 0.775);
-        drawTextWithGlow(subtitleElement, canvas.height * 0.72);
+          drawTextWithGlow(titleElement, canvas.height * 0.775);
+          drawTextWithGlow(subtitleElement, canvas.height * 0.72);
 
-        // Download the image
-        const link = document.createElement('a');
-        link.href = canvas.toDataURL('image/png');
-        link.download = 'SSR.png';
-        link.click();
-      });
+          const link = document.createElement('a');
+          link.href = canvas.toDataURL('image/png');
+          link.download = 'SSR.png';
+          link.click();
+        });
+      }
     });
   </script>
 </body>
