@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>v1.4</title>
+  <title>v1.5</title>
   <!-- Google Fonts: Noto Sans JP -->
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
   <style>
@@ -219,9 +219,7 @@
         reader.readAsDataURL(file);
       }
     });
-  </script>
 
-  <script>
     document.addEventListener('DOMContentLoaded', function () {
       const saveButton = document.getElementById('save-button');
 
@@ -243,7 +241,9 @@
           function drawTextWithGlow(textElement, offsetY) {
             const text = textElement.textContent;
             const computedStyle = window.getComputedStyle(textElement);
-            context.font = `${computedStyle.fontWeight} ${computedStyle.fontSize} ${computedStyle.fontFamily}`;
+            const fontSize = parseFloat(computedStyle.fontSize);
+
+            context.font = `${computedStyle.fontWeight} ${fontSize * (canvas.width / window.innerWidth)}px ${computedStyle.fontFamily}`;
             context.textAlign = 'center';
             context.textBaseline = 'middle';
             context.fillStyle = computedStyle.color;
@@ -271,12 +271,12 @@
           const titleElement = document.querySelector('.glow-title');
           const subtitleElement = document.querySelector('.glow-subtitle');
 
-          drawTextWithGlow(titleElement, canvas.height * 0.775);
-          drawTextWithGlow(subtitleElement, canvas.height * 0.72);
+          drawTextWithGlow(titleElement, canvas.height * 0.735);
+          drawTextWithGlow(subtitleElement, canvas.height * 0.7);
 
           const link = document.createElement('a');
+          link.download = 'image_with_text.png';
           link.href = canvas.toDataURL('image/png');
-          link.download = 'SSR.png';
           link.click();
         });
       }
