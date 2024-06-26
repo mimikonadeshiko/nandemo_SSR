@@ -24,7 +24,7 @@
       display: inline-block;
     }
 
-    #background-image-behind {
+    .background-image-behind {
       position: absolute;
       top: 0;
       left: 50%;
@@ -59,7 +59,6 @@
       font-weight: 700;
       letter-spacing: 2.5px;
       text-shadow: 0 0 4px #fff, 0 0 8px #fff;
-
     }
 
     .glow-subtitle {
@@ -67,7 +66,6 @@
       font-size: 1.8em;
       font-weight: 400;
       text-shadow: 0 0 2px #fff, 0 0 4px #fff;
-
     }
 
     #save-button {
@@ -82,26 +80,115 @@
       z-index: 3;
       position: relative;
     }
+
+    #upload_photo_button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 1em;
+      cursor: pointer;
+      background-color: #fff;
+      border: none;
+      border-radius: 5px;
+      font-family: 'Noto Sans JP', sans-serif;
+      z-index: 3;
+      position: relative;
+    }
+
+    #text-inputs {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 20px;
+      z-index: 3;
+      position: relative;
+    }
+
+    #text-inputs input {
+      margin: 5px;
+      padding: 10px;
+      font-size: 1em;
+      font-family: 'Noto Sans JP', sans-serif;
+    }
   </style>
 </head>
 
 <body>
   <div class="container">
-    <!--<img src="AAAA.JPG" id="background-image-behind" alt="背景画像後ろ">-->
-    <div id="imagePreview" id="background-image-behind"></div>
+    <div id="imagePreview" class="background-image-behind"></div>
     <img src="https://raw.githubusercontent.com/mimikonadeshiko/nandemo_SSR/4282555012dfc765c352c53361caa48fa4afaa49/SSR_base.png" id="background-image">
-    <h1 class=" glow-title">SSR</h1>
-    <h3 class="glow-subtitle">待望のHTML版</h3>
+    <h3 class="glow-subtitle">サブタイトル</h3>
+    <h1 class="glow-title">タイトル</h1>
+  </div>
+  <div id="text-inputs">
+    <input type="text" id="subtitle-input" placeholder="サブタイトルを入力">
+    <input type="text" id="title-input" placeholder="タイトルを入力">
   </div>
   <button id="save-button">画像として保存</button>
-  <input type="file" id="fileInput" accept="image/*">
-
+  <button id="upload_photo_button"><input type="file" id="fileInput" accept="image/*"></button>
   <canvas id="canvas" style="display:none;"></canvas>
 
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const imagePreview = document.getElementById('imagePreview');
+    const foregroundImage = document.getElementById('background-image');
 
+    const subtitleInput = document.getElementById('subtitle-input');
+    const titleInput = document.getElementById('title-input');
+
+    const subtitleElement = document.querySelector('.glow-subtitle');
+    const titleElement = document.querySelector('.glow-title');
+
+    subtitleInput.addEventListener('input', function () {
+      subtitleElement.textContent = this.value;
+    });
+
+    titleInput.addEventListener('input', function () {
+      titleElement.textContent = this.value;
+    });
+
+    fileInput.addEventListener('change', function () {
+      const file = this.files[0];
+
+      if (file) {
+        const reader = new FileReader();
+
+        reader.addEventListener('load', function () {
+          const imgElement = document.createElement('img');
+          imgElement.src = reader.result;
+          imgElement.onload = function () {
+            const fgWidth = foregroundImage.naturalWidth;
+            const fgHeight = foregroundImage.naturalHeight;
+
+            const aspectRatio = imgElement.naturalWidth / imgElement.naturalHeight;
+            let newWidth = fgWidth;
+            let newHeight = fgHeight;
+
+            if (aspectRatio > 1) {
+              newWidth = fgWidth;
+              newHeight = fgWidth / aspectRatio;
+            } else {
+              newHeight = fgHeight;
+              newWidth = fgHeight * aspectRatio;
+            }
+
+            imgElement.style.width = `${newWidth}px`;
+            imgElement.style.height = `${newHeight}px`;
+            imgElement.style.position = 'absolute';
+            imgElement.style.top = '0';
+            imgElement.style.left = '50%';
+            imgElement.style.transform = 'translateX(-50%)';
+
+            imagePreview.innerHTML = '';
+            imagePreview.appendChild(imgElement);
+          };
+        });
+
+        reader.readAsDataURL(file);
+      }
+    });
+  </script>
 
   <script>
-
     document.addEventListener('DOMContentLoaded', function () {
       const saveButton = document.getElementById('save-button');
 
@@ -109,20 +196,17 @@
         saveButton.addEventListener('click', function () {
           const canvas = document.getElementById('canvas');
           const context = canvas.getContext('2d');
-          const imageBehind = document.getElementById();
+          const imageBehind = document.querySelector('#imagePreview img');
           const image = document.getElementById('background-image');
 
-          // キャンバスのサイズを後ろの画像のサイズに設定
+          if (!imageBehind) return;
+
           canvas.width = imageBehind.naturalWidth;
           canvas.height = imageBehind.naturalHeight;
 
-          // 後ろの画像をキャンバスに描画
           context.drawImage(imageBehind, 0, 0, canvas.width, canvas.height);
-
-          // 前景の画像をキャンバスに描画（透過PNG）
           context.drawImage(image, 0, 0, canvas.width, canvas.height);
 
-          // 光るテキストを描画する関数
           function drawTextWithGlow(textElement, offsetY) {
             const text = textElement.textContent;
             const computedStyle = window.getComputedStyle(textElement);
@@ -131,7 +215,6 @@
             context.textBaseline = 'middle';
             context.fillStyle = computedStyle.color;
 
-            // テキストシャドウのプロパティを取得
             const textShadow = computedStyle.textShadow;
             if (textShadow) {
               const shadowMatches = textShadow.match(/rgba?\((\d+), (\d+), (\d+),? (\d+\.?\d*)?\) (\d+)px (\d+)px (\d+)px/g);
@@ -147,20 +230,17 @@
               }
             }
 
-            // キャンバスにテキストを描画
             const x = canvas.width / 2;
             const y = offsetY;
             context.fillText(text, x, y);
           }
 
-          // タイトルとサブタイトルを描画
           const titleElement = document.querySelector('.glow-title');
           const subtitleElement = document.querySelector('.glow-subtitle');
 
           drawTextWithGlow(titleElement, canvas.height * 0.775);
           drawTextWithGlow(subtitleElement, canvas.height * 0.72);
 
-          // リンク要素を作成してダウンロードをトリガー
           const link = document.createElement('a');
           link.href = canvas.toDataURL('image/png');
           link.download = 'SSR.png';
@@ -170,7 +250,5 @@
     });
   </script>
 </body>
-
-}
 
 </html>
